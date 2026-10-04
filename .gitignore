@@ -1,0 +1,17 @@
+# Secrets
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Raw experiment outputs
+results/*.jsonl
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
