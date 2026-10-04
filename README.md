@@ -2,10 +2,28 @@
 
 **A reproducible study of how natural Korean prompt variations affect the accuracy and consistency of language-model responses.**
 
+> **Research area:** Robustness / multilingual model evaluation  
+> **Current stage:** Pilot-ready protocol and starter benchmark
+
+This repository turns a simple research question into an inspectable, reproducible study:
+
+> **When two Korean prompts mean the same thing, does a language model behave the same way?**
+
+## Reviewer quick links
+
+- **[One-page project summary](docs/project_summary.md)**
+- **[Detailed research protocol](docs/research_protocol.md)**
+- **[Scoring & quality-control plan](docs/scoring_and_quality_control.md)**
+- **[Starter pilot benchmark](data/pilot_prompts.csv)**
+- **[Research roadmap](ROADMAP.md)**
+- **[API evaluation script](src/run_evaluation.py)**
+- **[Scoring script](src/score_exact.py)**
+
 ## Project status
 
-**Pilot-ready / protocol development.**  
-This repository contains the research protocol, a small starter benchmark, and reproducible evaluation scripts. No empirical results are claimed yet; results will be added only after experiments are run.
+**Pilot-ready / protocol development.**
+
+The research questions, perturbation taxonomy, quality-control rules, starter benchmark, and evaluation code are in place. No empirical results are claimed yet; findings will be added only after the corresponding experiments are actually run.
 
 ## Motivation
 
@@ -60,43 +78,92 @@ Initial task categories will emphasize questions that can be scored reliably:
 ## Primary measurements
 
 - **Accuracy** on objectively scored tasks
-- **Pairwise consistency** across variants of the same base prompt
+- **Variant consistency** across prompts that share the same intended meaning
 - **Robustness gap**: performance difference between the standard prompt and each perturbation category
 - **Failure concentration** by perturbation and task category
 - **Cross-model comparison**, where access permits
 
 The core analysis will prioritize simple, auditable metrics before introducing more complex statistical methods.
 
-## Pilot plan
+## Pilot benchmark
 
-The pilot is intentionally small and serves three purposes:
+The starter benchmark in `data/pilot_prompts.csv` is a **methodological seed dataset**, not a completed benchmark.
 
-1. validate the transformation taxonomy,
-2. validate automated collection and scoring,
-3. identify ambiguous tasks before scaling.
+It currently demonstrates the intended paired structure:
 
-The starter benchmark in `data/pilot_prompts.csv` is a **methodological seed dataset**, not a completed benchmark. Each prompt should be manually reviewed before inclusion in the full study.
+```
+base task
+├── standard Korean
+├── paraphrase
+├── formality shift
+├── typo
+├── spacing variation
+└── word-order variation
+```
+
+Every variant should be manually reviewed for meaning preservation before inclusion in the full study.
 
 ## Reproducibility
 
-The repository is designed so that a reviewer can inspect the protocol independently of the eventual results.
+The repository separates benchmark design, raw collection, scoring, and analysis.
 
 ```
 .
 ├── README.md
+├── ROADMAP.md
 ├── data/
 │   └── pilot_prompts.csv
 ├── docs/
+│   ├── project_summary.md
 │   ├── research_protocol.md
 │   └── scoring_and_quality_control.md
+├── results/
+│   └── README.md
 ├── src/
 │   ├── run_evaluation.py
-│   └── score_exact.py
+│   ├── score_exact.py
+│   └── summarize_results.py
 ├── .gitignore
 └── requirements.txt
 ```
 
-API keys are read from environment variables and must never be committed to the repository. Raw model outputs will be stored separately from the benchmark so that prompts, responses, and scores can be audited.
+API keys are read from environment variables and must never be committed. Raw outputs are kept separate from the benchmark so that prompts, responses, and scores can be audited.
+
+## Minimal pilot workflow
+
+After installing the dependency and setting an API key:
+
+```bash
+pip install -r requirements.txt
+export OPENAI_API_KEY="YOUR_KEY"
+```
+
+Run a small sample first:
+
+```bash
+python src/run_evaluation.py \
+  --input data/pilot_prompts.csv \
+  --output results/pilot_raw.jsonl \
+  --model YOUR_MODEL_ID \
+  --limit 10
+```
+
+Score deterministic multiple-choice outputs:
+
+```bash
+python src/score_exact.py \
+  --input results/pilot_raw.jsonl \
+  --output results/pilot_scored.jsonl
+```
+
+Summarize accuracy and robustness gaps:
+
+```bash
+python src/summarize_results.py \
+  --input results/pilot_scored.jsonl
+```
+
+Model identifiers are intentionally supplied at run time instead of being hard-coded, so the protocol remains inspectable as available models change.
 
 ## Research principles
 
